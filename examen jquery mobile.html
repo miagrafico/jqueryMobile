@@ -1,0 +1,275 @@
+<!doctype html>
+<html>
+<head>
+	<meta name="viewport" charset="utf-8">
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+	
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBe1T9M0UbcL-jsGOMqUEme4x0T5L-Xplk&callback=Initmap"></script>
+	
+	 <style type="text/css">
+	 #mapaubicacion,#maparesultado{
+	 	width: 100%;
+	 	height:500px;
+	 	padding: 0; 
+
+	 }
+	 </style>	
+	
+	<script type="text/javascript">
+	function cambiarpagina(page){
+		$.mobile.changePage("#"+page,{
+			transition:"flow"
+		});
+	}
+
+	
+$(document).ready(function(){
+
+	var marcadorregistro;	
+	var Hoteles=[];
+	var maparegistro;
+	var latlnginicial= new google.maps.LatLng(25.760527,-80.192800);
+	var latitudpunto;
+	var longitudpunto;
+
+	
+	//muestra el mapa donde el usuario puede seleccionar la ubicacion del hotel que registrara//
+	function mostrarmaparegistro(){
+		var opciones={
+			zoom:5,
+			center:latlnginicial,
+			mapTypeId:google.maps.MapTypeId.ROADMAP
+		};
+		maparegistro= new google.maps.Map(document.getElementById("mapaubicacion"),opciones);
+		marcadorregistro=new google.maps.Marker({
+			position:latlnginicial,
+			map:maparegistro,
+			draggable:true,
+			title:"Escoja ubicacion del hotel!"
+		});
+		google.maps.event.addListener(marcadorregistro,'dragend',function (event){
+			latitudpunto=event.latLng.lat();
+			longitudpunto=event.latLng.lng();
+		});
+	}
+	// muestra la ubicacion y el marcador seleccionados por el usuario//
+	function mostrarmaparesultado(){
+
+		var opciones={
+			zoom:5,
+			center:latlnginicial,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var mapa=new google.maps.Map(document.getElementById("maparesultado"),opciones);
+
+		for(var i=0;i<Hoteles.length;i++){
+
+			var latlngN=new google.maps.LatLng(Hoteles[i].latitud,Hoteles[i].longitud);
+			var marcador=new google.maps.Marker({
+				position:latlngN,
+				map:mapa,
+				title:Hoteles[i].nombre
+			});
+		
+		
+        
+
+
+		}
+
+		
+		
+	}
+//funcion para mostrar pagina de registro y el mapa donde se buscara a ubicacion del hotel a registrar//
+	$("#registrar").click(function(){
+		cambiarpagina("paginaregistro");
+		mostrarmaparegistro();
+	});
+	//funcion del boton volver//
+	$(".volver").click(function(){
+		cambiarpagina("gestionhotel");
+	});
+	//funcion para mostrar pagina de lista de hoteles registrados , donde se crea el boton de cada hotel//
+
+
+
+	
+   
+   // funcion para registrar los datos del hotel//
+
+ $("#registrarhotel").click(function(){
+
+    var nombre=$("#nombre").val();
+    var ciudad=$("#ciudad").val();
+    var telefono=$("#telefono").val();
+    var estrellas=$("#estrellas").val();
+ 
+    
+  var hoteles={
+  	nombre:nombre,
+  	ciudad:ciudad,
+  	telefono:telefono,
+  	estrellas:estrellas,
+  	latitud:latitudpunto,
+	longitud:longitudpunto
+  };
+  Hoteles.push(hoteles);
+  	
+		
+
+    alert("hotel registrado correctamente!")
+    limpiarcampos();
+   
+   
+});
+
+//funcion para limpiar campos luego del registro//
+
+function limpiarcampos(){
+	$("#nombre").val("");
+	$("#ciudad").val("");
+	$("#telefono").val("");
+	$("#estrellas").val("");
+	marcadorregistro.setPosition(latlnginicial);
+    maparegistro.setCenter(latlnginicial);
+}
+	// con esta funcion se crean los botones que nos dirigen a los datos de cada hotel por su nombre//
+
+
+
+function cargarHoteles() {
+        $('#listabotones').empty();
+
+        for (var i = 0; i < Hoteles.length; i++) {
+
+            var lista = "";
+            lista += '<a  class="ui-btn">';
+            lista += '<h3>' + Hoteles[i].nombre + " - <strong>Ciudad:</strong> " + Hoteles[i].ciudad + '</h3>';
+			lista += '<p>' + Hoteles[i].estrellas + " Estrellas" + '</p>';
+			lista+='<p><strong>Telefono:</strong>'+" "+Hoteles[i].telefono+"</p>";
+			
+            lista += '</a>';
+
+            var item = "<li>" + lista + "</li>";
+            $("#listabotones").append(item);
+
+        }
+        }
+
+      
+
+        $("#listahoteles").click(function() {
+
+        cambiarpagina("listadehoteles");
+		cargarHoteles();
+		
+    });
+
+
+        function mostrardatoshotel() {
+        	for(var i=0; i<Hoteles.length;i++){
+
+        	
+            var datos = "";
+            datos += "<b>Nombre:</b>" + Hoteles[i].nombre + "<br>";
+            datos += "<b>Ciudad:</b>" + Hoteles[i].ciudad + "<br>";
+            datos += "<b>Telefono:</b>" + Hoteles[i].telefono + "<br>";
+            datos += "<b>Estrellas:</b>" + Hoteles[i].estrellas + "<br>";
+            $("#datos").html(datos);
+            
+                     
+        }
+    }
+
+
+$("#ir_ubicaciones").click(function(){
+cambiarpagina("datoshotel");
+mostrarmaparesultado();
+});
+
+
+	
+});
+	</script>
+</head>
+<body>
+	<div data-role="page" id="gestionhotel">
+		<div data-role="header">
+			<h1>gestion hotel</h1>
+		</div>
+		<div data-role="content" >
+			<a id="registrar" class="ui-btn">Registrar hotel</a>
+			<a id="listahoteles" class="ui-btn">Lista hoteles</a>
+		</div>
+		<div data-role="footer">
+			<h1>Gestion hotel</h1>
+		</div>
+	</div>
+	<div data-role="page" id="paginaregistro">
+		<div data-role="header">
+			<h1>Registro de hotel</h1>
+		</div>
+		<div data-role="content">
+			<form>
+				<div class="ui-field-contain">
+					<label for="nombre">Nombre:</label>
+					<input type="text" name="nombre" id="nombre">
+					<label for="ciudad">Ciudad:</label>
+					<input type="text" name="ciudad" id="ciudad">
+					<label for="telefono">Telefono:</label>
+					<input type="text" name="telefono" id="telefono">
+					<label for="estrellas">Estrellas:</label>
+					<input type="text" name="estrellas"id="estrellas">
+					<label for="ubicacion">Ubicacion:</label>
+					<div data-role="content" id="mapaubicacion"></div>
+					<a id="registrarhotel" class="ui-btn">Registrar Hotel</a>
+					<a id="volver"  class="ui-btn volver" >Volver</a>
+				</div>
+			</form>
+		</div>
+			<div data-role="footer">
+				<h1>Registro de hotel</h1>
+			</div>
+		</div>
+
+			
+
+		<div data-role="page" id="listadehoteles">
+			<div data-role="header">
+				<h1>Lista de Hoteles</h1>
+			</div>
+			<div data-role="content" id="hotelesregistrados">
+				<div >
+					<ul id="listabotones" data-inset="true" data-role="listview">
+					</ul>					
+				</div>
+				<a class="ui-btn" id="ir_ubicaciones">Ubicaciones en mapa</a>
+				<a class="ui-btn volver">Volver</a>
+			</div>
+			<div data-role="footer">
+			<h1>Lista Hoteles</h1>
+			</div> 
+	</div>
+
+
+		<div data-role="page" id="datoshotel">
+			<div data-role="header">
+				<h1>Ubicacion  Hoteles</h1>
+			</div>
+			<div data-role="content" id="datos">
+			<div data-role="content" id="maparesultado"></div>
+		     
+			<a class="ui-btn volver" class="volver">Volver</a>
+			
+			
+		</div>
+		<div data-role="footer">
+			<h1>Ubicacion Hoteles</h1>
+		</div>
+	</div>
+			
+
+		</body>
+		</html>
